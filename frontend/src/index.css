@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/* ── Design Tokens ─────────────────────────────────────── */
+@theme {
+  --color-primary:      #1D4ED8;
+  --color-primary-dark: #1e3a8a;
+  --color-primary-light:#3B82F6;
+  --color-accent:       #166534;
+  --color-warn:         #FBBF24;
+  --color-crit:         #DC2626;
+  --color-bg:           #F9FAFB;
+  --color-surface:      #FFFFFF;
+  --color-text:         #1F2937;
+  --color-muted:        #6B7280;
+
+  --font-sans: 'Inter', 'Roboto', ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1rem;
+  --shadow-card: 0 4px 24px 0 rgb(0 0 0 / 0.07);
+}
+
+/* ── Google Fonts ─────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ── Base Reset ───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark mode overrides */
+.dark body {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+/* ── Utility ──────────────────────────────────────────── */
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  border: 1px solid #e5e7eb;
+}
+
+.dark .card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* Frosted glass */
+.glass {
+  backdrop-filter: blur(16px) saturate(180%);
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(255,255,255,0.4);
+}
+.dark .glass {
+  background: rgba(15,23,42,0.75);
+  border-color: rgba(255,255,255,0.08);
+}
+
+/* Blurred paywall overlay */
+.blur-premium {
+  filter: blur(6px);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Animated gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #1D4ED8, #7C3AED, #166534);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Scrollbar (webkit) */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+/* Smooth transitions globally */
+* { transition-duration: 150ms; transition-timing-function: cubic-bezier(0.4,0,0.2,1); }
+
+/* Input focus ring */
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Page fade-in */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fadeInUp 0.4s ease both; }
+
+/* Pulse glow for badge */
+@keyframes glowPulse {
+  0%,100% { box-shadow: 0 0 12px 2px #1D4ED855; }
+  50%      { box-shadow: 0 0 28px 8px #1D4ED8aa; }
+}
+.glow-pulse { animation: glowPulse 2.4s ease-in-out infinite; }
+
+/* Needle rotation for gauge */
+@keyframes needleSpin {
+  from { transform: rotate(-90deg); }
+  to   { transform: rotate(var(--needle-deg, 0deg)); }
+}
+.needle-animate { animation: needleSpin 1.2s cubic-bezier(0.34,1.56,0.64,1) both; }
