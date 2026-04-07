@@ -6,10 +6,10 @@ import { sendOTP as apiSendOTP, verifyOTP as apiVerifyOTP, register as apiRegist
 
 // ── Helpers ──────────────────────────────────────────────────
 const RULES = [
-  { id: 'len',    label: 'At least 8 characters',          test: p => p.length >= 8           },
-  { id: 'upper',  label: 'One uppercase letter (A-Z)',      test: p => /[A-Z]/.test(p)        },
-  { id: 'num',    label: 'One number (0-9)',                test: p => /\d/.test(p)            },
-  { id: 'sym',    label: 'One special character (!@#$...)', test: p => /[^A-Za-z0-9]/.test(p) },
+  { id: 'len', label: 'At least 8 characters', test: p => p.length >= 8 },
+  { id: 'upper', label: 'One uppercase letter (A-Z)', test: p => /[A-Z]/.test(p) },
+  { id: 'num', label: 'One number (0-9)', test: p => /\d/.test(p) },
+  { id: 'sym', label: 'One special character (!@#$...)', test: p => /[^A-Za-z0-9]/.test(p) },
 ];
 
 function StrengthBar({ password }) {
@@ -19,11 +19,11 @@ function StrengthBar({ password }) {
   return (
     <div className="mt-3">
       <div className="flex gap-1 mb-1">
-        {[0,1,2,3].map(i => (
-          <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i < passed ? colors[passed-1] : 'bg-gray-200 dark:bg-slate-700'}`} />
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i < passed ? colors[passed - 1] : 'bg-gray-200 dark:bg-slate-700'}`} />
         ))}
       </div>
-      {password && <p className={`text-xs font-semibold mt-1 ${passed >= 3 ? 'text-green-600' : passed >= 2 ? 'text-yellow-600' : 'text-red-500'}`}>{labels[Math.max(passed-1,0)]}</p>}
+      {password && <p className={`text-xs font-semibold mt-1 ${passed >= 3 ? 'text-green-600' : passed >= 2 ? 'text-yellow-600' : 'text-red-500'}`}>{labels[Math.max(passed - 1, 0)]}</p>}
       <ul className="mt-2 space-y-1">
         {RULES.map(r => {
           const ok = r.test(password);
@@ -40,23 +40,23 @@ function StrengthBar({ password }) {
 
 function OtpBoxes({ value, onChange }) {
   const refs = Array.from({ length: 6 }, () => useRef(null));
-  const handleKey = (i, e) => { if (e.key === 'Backspace' && !e.target.value && i > 0) refs[i-1].current?.focus(); };
+  const handleKey = (i, e) => { if (e.key === 'Backspace' && !e.target.value && i > 0) refs[i - 1].current?.focus(); };
   const handleChange = (i, v) => {
-    const d = v.replace(/\D/,'').slice(-1);
+    const d = v.replace(/\D/, '').slice(-1);
     const arr = value.split('');
     arr[i] = d;
     onChange(arr.join(''));
-    if (d && i < 5) refs[i+1].current?.focus();
+    if (d && i < 5) refs[i + 1].current?.focus();
   };
   const handlePaste = e => {
-    const pasted = e.clipboardData.getData('text').replace(/\D/g,'').slice(0,6);
-    onChange(pasted.padEnd(6,' '));
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    onChange(pasted.padEnd(6, ' '));
     refs[Math.min(pasted.length, 5)].current?.focus();
     e.preventDefault();
   };
   return (
     <div className="flex gap-2 justify-center" onPaste={handlePaste}>
-      {Array.from({length:6}).map((_,i) => (
+      {Array.from({ length: 6 }).map((_, i) => (
         <input key={i} ref={refs[i]} id={`otp-box-${i}`}
           type="text" inputMode="numeric" maxLength={1}
           value={value[i] || ''}
@@ -120,9 +120,9 @@ function SpinBtn({ id, onClick, disabled, label, loadingLabel, className }) {
 // ── Illustration panel ───────────────────────────────────────
 function IllustrationPanel({ step }) {
   const steps = [
-    { emoji: '🔍', title: 'Find Your Connection',  desc: 'Enter your 12-digit MSEDCL Consumer ID to locate your electricity account.' },
-    { emoji: '📧', title: 'Verify Your Email',   desc: 'We\'ve sent a 6-digit OTP to your registered email address for security.' },
-    { emoji: '✅', title: 'Almost There!',         desc: 'Set a strong password to secure your Voltify account.' },
+    { emoji: '🔍', title: 'Find Your Connection', desc: 'Enter your 12-digit MSEDCL Consumer ID to locate your electricity account.' },
+    { emoji: '📧', title: 'Verify Your Email', desc: 'We\'ve sent a 6-digit OTP to your registered email address for security.' },
+    { emoji: '✅', title: 'Almost There!', desc: 'Set a strong password to secure your Voltify account.' },
   ];
   const s = steps[step];
   return (
@@ -139,7 +139,7 @@ function IllustrationPanel({ step }) {
       <h2 className="text-2xl font-extrabold mb-3 text-center">{s.title}</h2>
       <p className="text-blue-100 text-center text-sm leading-relaxed max-w-xs">{s.desc}</p>
       <div className="flex gap-2 mt-10">
-        {[0,1,2].map(i => (
+        {[0, 1, 2].map(i => (
           <div key={i} className={`rounded-full transition-all ${i === step ? 'w-6 h-2 bg-white' : 'w-2 h-2 bg-white/40'}`} />
         ))}
       </div>
@@ -151,17 +151,18 @@ const inputCls = "w-full px-4 py-3 rounded-xl border border-gray-300 dark:border
 
 // ════════════════════════════════════════════════════════════
 export default function SignupPage() {
-  const navigate    = useNavigate();
+  const navigate = useNavigate();
   const { setAuth } = useAuth();
 
-  const [step,        setStep]        = useState(0);
-  const [consumerId,  setConsumerId]  = useState('');
-  const [email,       setEmail]       = useState('');
-  const [otp,         setOtp]         = useState('');
-  const [password,    setPassword]    = useState('');
-  const [showPw,      setShowPw]      = useState(false);
-  const [error,       setError]       = useState('');
-  const [loading,     setLoading]     = useState(false);
+  const [step, setStep] = useState(0);
+  const [consumerId, setConsumerId] = useState('');
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [fullName, setFullName] = useState('');
 
   // ════════════════════════════════════════════════════════════
   //  STEP 0 — Locate Connection → Register + Send OTP
@@ -176,11 +177,11 @@ export default function SignupPage() {
     try {
       // 1. Register the user (creates account, returns token)
       await apiRegister({
-        fullName:   'Tanaji Patil',    // Will be confirmed/editable in Step 2
-        email:      email,
+        fullName: fullName.trim(),    // Will be confirmed/editable in Step 2
+        email,
         consumerId,
-        buCode:     'KLNN',            // Default; overrideable in settings
-        password:   'TempPass@123',   // Placeholder; replaced in Step 2
+        buCode: 'KLNN',            // Default; overrideable in settings
+        password: 'TempPass@123',   // Placeholder; replaced in Step 2
       });
 
       // 2. Send OTP to email
@@ -199,11 +200,11 @@ export default function SignupPage() {
   const handleStep1 = async (e) => {
     e?.preventDefault();
     setError('');
-    if (otp.replace(/\s/g,'').length < 6) return setError('Please enter the complete 6-digit OTP.');
+    if (otp.replace(/\s/g, '').length < 6) return setError('Please enter the complete 6-digit OTP.');
 
     setLoading(true);
     try {
-      const { data } = await apiVerifyOTP(email, otp.replace(/\s/g,''));
+      const { data } = await apiVerifyOTP(email, otp.replace(/\s/g, ''));
       // Save JWT immediately so Step 2 can make authenticated requests
       setAuth({ user: data.user, token: data.token });
       setStep(2);
@@ -266,11 +267,10 @@ export default function SignupPage() {
           <div className="flex items-center gap-2 mb-6">
             {['Locate', 'Verify', 'Confirm'].map((label, i) => (
               <div key={i} className="flex items-center gap-1.5">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
-                  i < step  ? 'bg-blue-600 border-blue-600 text-white'
-                : i === step? 'border-blue-600 text-blue-600 bg-blue-50 dark:bg-blue-900/30'
-                : 'border-gray-300 dark:border-slate-600 text-gray-400'
-                }`}>{i < step ? <Check size={12} /> : i + 1}</div>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${i < step ? 'bg-blue-600 border-blue-600 text-white'
+                  : i === step ? 'border-blue-600 text-blue-600 bg-blue-50 dark:bg-blue-900/30'
+                    : 'border-gray-300 dark:border-slate-600 text-gray-400'
+                  }`}>{i < step ? <Check size={12} /> : i + 1}</div>
                 <span className={`text-xs font-semibold hidden sm:block ${i === step ? 'text-blue-600' : 'text-gray-400 dark:text-slate-500'}`}>{label}</span>
                 {i < 2 && <ChevronRight size={14} className="text-gray-300 dark:text-slate-600" />}
               </div>
@@ -284,12 +284,26 @@ export default function SignupPage() {
                 <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">Create Account</h1>
                 <p className="text-sm text-gray-500 dark:text-slate-400">Enter your MSEDCL details to get started</p>
               </div>
+              <div>                                              {/* ← same indent as the div below */}
+                <label className="block text-xs font-semibold text-gray-600 dark:text-slate-400 uppercase tracking-wide mb-1.5">
+                  Full Name
+                </label>
+                <input
+                  id="input-fullname"
+                  type="text"
+                  placeholder="e.g. Rahul Sharma"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                  className={inputCls}
+                />
+              </div>
+
 
               <div>
                 <label className="block text-xs font-semibold text-gray-600 dark:text-slate-400 uppercase tracking-wide mb-1.5">12-Digit Consumer ID</label>
                 <input id="input-consumer-id" type="text" inputMode="numeric" maxLength={12}
                   placeholder="e.g. 210000001234"
-                  value={consumerId} onChange={e => setConsumerId(e.target.value.replace(/\D/g,''))}
+                  value={consumerId} onChange={e => setConsumerId(e.target.value.replace(/\D/g, ''))}
                   className={inputCls} />
                 <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Found on your MSEDCL electricity bill</p>
               </div>
@@ -352,10 +366,10 @@ export default function SignupPage() {
               </div>
 
               {[
-                { label: 'Full Name',    val: 'Tanaji Patil', id: 'prefill-name'    },
-                { label: 'Address',     val: 'Kalyan, MH',   id: 'prefill-address' },
-                { label: 'Email',       val: email,          id: 'prefill-email'   },
-                { label: 'Consumer ID', val: consumerId,      id: 'prefill-cid'     },
+                { label: 'Full Name', val: 'Tanaji Patil', id: 'prefill-name' },
+                { label: 'Address', val: 'Kalyan, MH', id: 'prefill-address' },
+                { label: 'Email', val: email, id: 'prefill-email' },
+                { label: 'Consumer ID', val: consumerId, id: 'prefill-cid' },
               ].map(f => (
                 <div key={f.id}>
                   <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide mb-1">{f.label}</label>
