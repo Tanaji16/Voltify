@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Trophy, Star, Crown, Lock } from 'lucide-react';
+import { Trophy, Star, Crown } from 'lucide-react';
 import { useTheme, useAuth } from '../App.jsx';
+import { getBadges } from '../api/challenges.js';
 
 const COMMUNITY_DATA = [
   { name: 'You',            kWh: 264, fill: '#16A34A' },
@@ -31,6 +33,14 @@ export default function Card4_EcoScore() {
   const { user } = useAuth();
   const surface  = dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200';
   const cityName = user?.city || user?.meters?.[0]?.city || 'Your Area';
+
+  // Live earned badges from Monthly Challenges
+  const [earnedBadges, setEarnedBadges] = useState([]);
+  useEffect(() => {
+    getBadges()
+      .then(res => setEarnedBadges(res.data.badges || []))
+      .catch(() => {}); // fail silently
+  }, []);
 
   return (
     <section className={`card ${surface} border p-6 animate-fade-in-up`} id="card-eco-score">
@@ -95,8 +105,9 @@ export default function Card4_EcoScore() {
       <div className="mt-6">
         <p className={`text-sm font-bold mb-3 ${dark ? 'text-slate-300' : 'text-gray-700'}`}>Your Achievements</p>
         <div className="flex flex-wrap gap-2">
+          {/* Static achievements */}
           {ACHIEVEMENTS.map((a, i) => (
-            <div key={i} id={`achievement-${i}`}
+            <div key={`static-${i}`} id={`achievement-${i}`}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${dark ? 'bg-slate-700/60 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
               <span className="text-lg">{a.icon}</span>
               <div>
@@ -105,6 +116,29 @@ export default function Card4_EcoScore() {
               </div>
             </div>
           ))}
+          {/* Live challenge badges */}
+          {earnedBadges.map((b, i) => (
+            <div
+              key={`earned-${i}`}
+              id={`earned-badge-${i}`}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all hover:scale-105 cursor-default ${
+                dark ? 'bg-slate-700/60 border-slate-600' : 'bg-white border-gray-200'
+              }`}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 0 12px 3px ${b.color}55`)}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}
+            >
+              <span className="text-lg">{b.icon}</span>
+              <div>
+                <p className={`text-xs font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>{b.label}</p>
+                <p className={`text-[10px] ${dark ? 'text-slate-400' : 'text-gray-500'}`}>{b.title}</p>
+              </div>
+            </div>
+          ))}
+          {earnedBadges.length === 0 && (
+            <p className={`text-xs italic ${dark ? 'text-slate-500' : 'text-gray-400'}`}>
+              Complete monthly challenges to earn badges here! 🏅
+            </p>
+          )}
         </div>
       </div>
 

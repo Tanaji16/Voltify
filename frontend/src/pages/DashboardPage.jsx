@@ -10,6 +10,7 @@ import Card4_EcoScore from '../components/Card4_EcoScore.jsx';
 import Card5_AIAdvisor from '../components/Card5_AIAdvisor.jsx';
 import Card6_PricingCheckout from '../components/Card6_PricingCheckout.jsx';
 import Card7_BuyVsKeep from '../components/Card7_BuyVsKeep.jsx';
+import Card8_Challenges from '../components/Card8_Challenges.jsx';
 import SavingsGraph from '../components/SavingsGraph.jsx';
 import { useTheme, useAuth } from '../App.jsx';
 
@@ -89,6 +90,9 @@ export default function DashboardPage() {
 
         {/* ── Card 4: Eco Score (full-width) ────────── */}
         <Card4_EcoScore />
+
+        {/* ── Card 8: Monthly Challenges (full-width) ─ */}
+        <Card8_Challenges />
 
         {/* ── Card 7: Buy vs Keep (full-width) ──────── */}
         <Card7_BuyVsKeep />
