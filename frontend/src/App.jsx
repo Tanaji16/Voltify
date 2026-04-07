@@ -11,20 +11,21 @@ export const ThemeContext = createContext({ dark: false, toggleDark: () => {} })
 export const useTheme     = () => useContext(ThemeContext);
 
 // ── Auth Context ─────────────────────────────────────────────
-export const AuthContext = createContext({ user: null, token: null, setAuth: () => {}, logout: () => {} });
+export const AuthContext = createContext({ user: null, token: null, activeMeterId: null, setActiveMeter: () => {}, setAuth: () => {}, logout: () => {} });
 export const useAuth     = () => useContext(AuthContext);
 
-// ── Helpers: persist auth to localStorage ───────────────────
 const STORAGE_TOKEN_KEY = 'voltify_token';
 const STORAGE_USER_KEY  = 'voltify_user';
+const STORAGE_METER_KEY = 'voltify_active_meter';
 
 function loadStoredAuth() {
   try {
     const token = localStorage.getItem(STORAGE_TOKEN_KEY);
     const user  = JSON.parse(localStorage.getItem(STORAGE_USER_KEY) || 'null');
-    return { token, user };
+    const meter = localStorage.getItem(STORAGE_METER_KEY);
+    return { token, user, meter };
   } catch {
-    return { token: null, user: null };
+    return { token: null, user: null, meter: null };
   }
 }
 
@@ -47,6 +48,19 @@ export default function App() {
   const stored = loadStoredAuth();
   const [user,  setUser]  = useState(stored.user);
   const [token, setToken] = useState(stored.token);
+  const [activeMeterId, setActiveMeterId] = useState(stored.meter);
+
+  // Auto-select first meter if none selected
+  useEffect(() => {
+    if (user && user.meters && user.meters.length > 0 && !activeMeterId) {
+      setActiveMeter(user.meters[0]._id);
+    }
+  }, [user]);
+
+  const setActiveMeter = (id) => {
+    setActiveMeterId(id);
+    localStorage.setItem(STORAGE_METER_KEY, id);
+  };
 
   // Keep localStorage in sync whenever auth state changes
   const setAuth = ({ user: u, token: t }) => {
@@ -58,19 +72,20 @@ export default function App() {
     } else {
       localStorage.removeItem(STORAGE_TOKEN_KEY);
       localStorage.removeItem(STORAGE_USER_KEY);
+      localStorage.removeItem(STORAGE_METER_KEY);
     }
   };
 
   const logout = () => {
     // Clear every Voltify key to prevent stale data leaking to the next session
-    localStorage.removeItem(STORAGE_TOKEN_KEY);
-    localStorage.removeItem(STORAGE_USER_KEY);
-    localStorage.removeItem('voltify_transactions');
-    localStorage.removeItem('voltify_appliances');
-    localStorage.removeItem('voltify_bill_result');
-    localStorage.removeItem('voltify_budget_target');
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('voltify_')) {
+        localStorage.removeItem(key);
+      }
+    });
     setUser(null);
     setToken(null);
+    setActiveMeterId(null);
   };
 
   const toggleDark = () => {
@@ -80,7 +95,7 @@ export default function App() {
 
   return (
     <ThemeContext.Provider value={{ dark, toggleDark }}>
-      <AuthContext.Provider value={{ user, token, setAuth, logout }}>
+      <AuthContext.Provider value={{ user, token, activeMeterId, setActiveMeter, setAuth, logout }}>
         <BrowserRouter>
           <Routes>
             {/* Public-only routes */}

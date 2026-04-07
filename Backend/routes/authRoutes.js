@@ -13,6 +13,7 @@ const {
   login,
   getMe,
   setPassword,
+  addMeter,
 } = require('../controllers/authController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -36,5 +37,8 @@ router.get('/me', protect, getMe);
 
 // POST /api/auth/set-password → Set password during signup step 2
 router.post('/set-password', protect, setPassword);
+
+// POST /api/auth/add-meter → Add another tracking meter
+router.post('/add-meter', protect, addMeter);
 
 module.exports = router;

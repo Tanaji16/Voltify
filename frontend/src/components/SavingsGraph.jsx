@@ -19,13 +19,15 @@ const BASE_BILLS = [2140, 2310, 2580, 2450, 1920, 1650];
 
 export default function SavingsGraph() {
   const { dark }   = useTheme();
-  const { user }   = useAuth();
+  const { user, activeMeterId }   = useAuth();
   
+  const currentMeter = user?.meters?.find(m => m._id === activeMeterId) || user?.meters?.[0];
+
   // Conditionally generate graph data
   let DATA = [];
-  if (user?.monthlyRecords && user.monthlyRecords.length > 0) {
+  if (currentMeter?.monthlyRecords && currentMeter.monthlyRecords.length > 0) {
     // Sort chronological: oldest to newest
-    const chronological = [...user.monthlyRecords].reverse();
+    const chronological = [...currentMeter.monthlyRecords].reverse();
     DATA = chronological.map((rec, i) => ({
       month: rec.month,
       bill: rec.amount,

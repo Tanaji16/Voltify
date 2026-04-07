@@ -10,7 +10,13 @@ exports.uploadBill = async (req, res) => {
     }
 
     const { path: filePath, mimetype } = req.file;
+    const { meterId } = req.body;
     let extractedText = '';
+
+    if (!meterId) {
+      if (req.file) fs.unlinkSync(filePath);
+      return res.status(400).json({ success: false, message: 'Meter ID is required to bind tracking records.' });
+    }
 
     if (mimetype === 'application/pdf') {
       const dataBuffer = fs.readFileSync(filePath);
@@ -82,7 +88,10 @@ exports.uploadBill = async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    user.monthlyRecords = records.sort((a, b) => {
+    const targetMeter = user.meters.id(meterId);
+    if (!targetMeter) return res.status(404).json({ success: false, message: 'Meter record not found' });
+
+    targetMeter.monthlyRecords = records.sort((a, b) => {
         if (a.year !== b.year) return b.year - a.year;
         const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
         return months.indexOf(b.month) - months.indexOf(a.month);
@@ -92,8 +101,11 @@ exports.uploadBill = async (req, res) => {
 
     res.status(200).json({ 
       success: true, 
-      message: 'Bill scanned and data ingested successfully!',
-      records: user.monthlyRecords
+      message: `Bill scanned successfully for ${targetMeter.meterName}!`,
+      records: targetMeter.monthlyRecords,
+      user: {
+        _id: user._id, fullName: user.fullName, email: user.email, meters: user.meters
+      }
     });
 
   } catch (error) {

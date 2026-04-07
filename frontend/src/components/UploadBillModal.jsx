@@ -3,7 +3,7 @@ import { useTheme } from '../App.jsx';
 import { uploadBill } from '../api/bills.js';
 import { UploadCloud, FileText, Image as ImageIcon, X, AlertCircle, CheckCircle } from 'lucide-react';
 
-export default function UploadBillModal({ isOpen, onClose, onSuccess }) {
+export default function UploadBillModal({ isOpen, onClose, onSuccess, activeMeterId }) {
   const { dark } = useTheme();
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState(null);
@@ -54,7 +54,7 @@ export default function UploadBillModal({ isOpen, onClose, onSuccess }) {
     setLoading(true);
     setError('');
     try {
-      const { data } = await uploadBill(file);
+      const { data } = await uploadBill(file, activeMeterId);
       setSuccess(data.message || 'Scanned successfully!');
       setTimeout(() => {
         onSuccess(data.records);

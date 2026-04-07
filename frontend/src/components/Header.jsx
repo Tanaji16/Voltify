@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Zap, Sun, Moon, Settings, Menu, X, Bell, User, LogOut, ChevronRight, Crown, Shield } from 'lucide-react';
+import { Zap, Sun, Moon, Settings, Menu, X, Bell, User, LogOut, ChevronRight, Crown, Shield, MapPin, Plus } from 'lucide-react';
 import { useTheme, useAuth } from '../App.jsx';
+import { addMeter } from '../api/auth.js';
 
 const NAV_LINKS = [
   { to: '/',        label: 'Dashboard' },
@@ -61,18 +62,22 @@ function useClickOutside(ref, callback) {
 
 export default function Header({ onSettingsOpen }) {
   const { dark, toggleDark } = useTheme();
-  const { user, logout }     = useAuth();
+  const { user, logout, activeMeterId, setActiveMeter, setAuth } = useAuth();
   const location             = useLocation();
   const [mobileOpen,  setMobileOpen]  = useState(false);
   const [showNotif,   setShowNotif]   = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showMeters,  setShowMeters]  = useState(false);
+  const [addingMeter, setAddingMeter] = useState(false);
   const [notifications, setNotifications] = useState(NOTIFICATIONS_DATA);
 
   const notifRef   = useRef(null);
   const profileRef = useRef(null);
+  const meterRef   = useRef(null);
 
   useClickOutside(notifRef,   () => setShowNotif(false));
   useClickOutside(profileRef, () => setShowProfile(false));
+  useClickOutside(meterRef,   () => setShowMeters(false));
 
   const unreadCount = notifications.filter(n => n.unread).length;
 
@@ -86,6 +91,22 @@ export default function Header({ onSettingsOpen }) {
   }[user?.subscriptionStatus] || { label: 'Free', color: 'gray' };
 
   const notifBg = { red: 'bg-red-100 dark:bg-red-900/30', amber: 'bg-amber-100 dark:bg-amber-900/30', blue: 'bg-blue-100 dark:bg-blue-900/30', green: 'bg-green-100 dark:bg-green-900/30' };
+
+  const currentMeter = user?.meters?.find(m => m._id === activeMeterId) || user?.meters?.[0];
+
+  const handleAddMeter = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    try {
+      const res = await addMeter(fd.get('name'), fd.get('consumerId'), fd.get('buCode'), fd.get('city') || '');
+      setAuth({ user: res.data.user, token: localStorage.getItem('voltify_token') });
+      setActiveMeter(res.data.user.meters[res.data.user.meters.length - 1]._id);
+      setAddingMeter(false);
+      setShowMeters(false);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to add meter');
+    }
+  };
 
   return (
     <header className={`sticky top-0 z-50 w-full ${dark ? 'bg-slate-900/95' : 'bg-white/95'} backdrop-blur-md border-b ${dark ? 'border-slate-700' : 'border-gray-200'} shadow-sm`}>
@@ -121,6 +142,62 @@ export default function Header({ onSettingsOpen }) {
 
           {/* ── Right Controls ────────────────────────────── */}
           <div className="flex items-center gap-1">
+
+            {/* ── Meter Switcher ─────────────────────────── */}
+            {user && user.meters && (
+              <div className="relative mr-2 hidden sm:block" ref={meterRef}>
+                <button onClick={() => { setShowMeters(m => !m); setShowProfile(false); setShowNotif(false); }}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
+                    dark ? 'bg-slate-800 border-slate-700 hover:border-slate-500 text-slate-200' 
+                         : 'bg-white border-gray-200 hover:border-gray-400 text-gray-800'
+                  }`}>
+                  <MapPin size={14} className="text-blue-500" />
+                  <span className="text-sm font-bold truncate max-w-[120px]">
+                    {currentMeter?.meterName || 'Select Meter'}
+                  </span>
+                </button>
+
+                {showMeters && (
+                  <div className={`absolute right-0 top-10 w-64 rounded-2xl shadow-xl border overflow-hidden z-50 ${dark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`} style={{ animation: 'dropDown 0.2s ease both' }}>
+                    <div className={`px-4 py-3 border-b text-xs font-black uppercase tracking-wider ${dark ? 'border-slate-700 text-slate-500' : 'border-gray-100 text-gray-400'}`}>
+                      Your Properties
+                    </div>
+                    <div className="max-h-60 overflow-y-auto p-2">
+                       {user.meters.map(m => (
+                         <button key={m._id} onClick={() => { setActiveMeter(m._id); setShowMeters(false); }}
+                           className={`w-full text-left px-3 py-2 rounded-xl mb-1 flex items-center justify-between ${
+                             m._id === activeMeterId 
+                               ? (dark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-50 text-blue-600') 
+                               : (dark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-gray-50 text-gray-700')
+                           }`}>
+                           <div>
+                             <p className="text-sm font-bold">{m.meterName}</p>
+                             <p className="text-xs opacity-70">ID: {m.consumerId}</p>
+                           </div>
+                           {m._id === activeMeterId && <div className="w-2 h-2 rounded-full bg-blue-500"></div>}
+                         </button>
+                       ))}
+                       
+                       {!addingMeter ? (
+                         <button onClick={() => setAddingMeter(true)} className={`w-full tracking-wide text-left px-3 py-2 rounded-xl text-xs font-bold mt-1 flex items-center gap-2 ${dark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}>
+                           <Plus size={14} /> Add new meter
+                         </button>
+                       ) : (
+                         <form onSubmit={handleAddMeter} className={`p-3 mt-1 rounded-xl border ${dark ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-200'} space-y-2`}>
+                            <input name="name" required placeholder="Name (e.g. Parents House)" className={`w-full p-2 text-xs rounded border ${dark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-gray-300'}`} />
+                            <input name="consumerId" required pattern="\d{12}" placeholder="12-Digit Consumer ID" className={`w-full p-2 text-xs rounded border ${dark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-gray-300'}`} />
+                            <input name="buCode" required placeholder="4-Digit BU Code" className={`w-full p-2 text-xs rounded border ${dark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-gray-300'}`} />
+                            <div className="flex gap-2 pt-1">
+                               <button type="submit" className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg flex-1">Save</button>
+                               <button type="button" onClick={() => setAddingMeter(false)} className={`px-3 py-1 text-xs font-bold rounded-lg flex-1 ${dark ? 'bg-slate-700 text-white' : 'bg-gray-200'}`}>Cancel</button>
+                            </div>
+                         </form>
+                       )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ── Notification Bell ──────────────────────── */}
             <div className="relative" ref={notifRef}>

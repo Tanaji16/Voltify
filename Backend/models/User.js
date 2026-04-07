@@ -29,22 +29,6 @@ const UserSchema = new mongoose.Schema(
       trim:     true,
     },
 
-    // ── MSEDCL / Mahavitaran Details ────────────────────────
-    consumerId: {
-      type:     String,
-      required: [true, 'Consumer ID is required'],
-      unique:   true,
-      trim:     true,
-      match:    [/^\d{12}$/, 'Consumer ID must be exactly 12 digits'],
-    },
-
-    buCode: {
-      type:     String,
-      required: [true, 'BU Code is required'],
-      trim:     true,
-      uppercase: true,
-    },
-
     // ── Authentication ──────────────────────────────────────
     password: {
       type:     String,
@@ -70,14 +54,39 @@ const UserSchema = new mongoose.Schema(
       default: null,
     },
 
-    // ── Historical Usage Records (from OCR uploads) ─────────
-    monthlyRecords: [
+    // ── Linked Meters / Properties ──────────────────────────
+    meters: [
       {
-        month:  { type: String }, // e.g., 'JAN', 'FEB'
-        year:   { type: Number }, // e.g., 2024
-        units:  { type: Number },
-        amount: { type: Number },
-        dateStr:{ type: String }, // Raw extraction e.g. "JAN-24"
+        meterName: {
+          type: String,
+          required: true,
+          default: 'Primary Home'
+        },
+        consumerId: {
+          type: String,
+          required: [true, 'Consumer ID is required'],
+          trim: true,
+          match: [/^\d{12}$/, 'Consumer ID must be exactly 12 digits'],
+        },
+        buCode: {
+          type: String,
+          required: [true, 'BU Code is required'],
+          trim: true,
+          uppercase: true,
+        },
+        city: {
+          type: String,
+          trim: true,
+        },
+        monthlyRecords: [
+          {
+            month:  { type: String },
+            year:   { type: Number },
+            units:  { type: Number },
+            amount: { type: Number },
+            dateStr:{ type: String },
+          }
+        ]
       }
     ],
 

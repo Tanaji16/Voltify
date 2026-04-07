@@ -29,6 +29,11 @@ const ApplianceSchema = new mongoose.Schema(
       index:    true,
     },
 
+    meterId: {
+      type:     mongoose.Schema.Types.ObjectId,
+      required: [true, 'Meter reference is required'],
+    },
+
     // ── Appliance Identity ────────────────────────────────
     applianceName: {
       type:     String,

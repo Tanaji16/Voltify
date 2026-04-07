@@ -55,3 +55,10 @@ export const getMe = () =>
  */
 export const setPassword = (password, city, overrideToken) =>
   api.post('/api/auth/set-password', { password, city }, overrideToken ? { headers: { Authorization: `Bearer ${overrideToken}` } } : undefined);
+
+/**
+ * Add a new meter profile to the user
+ * POST /api/auth/add-meter
+ */
+export const addMeter = (meterName, consumerId, buCode, city) =>
+  api.post('/api/auth/add-meter', { meterName, consumerId, buCode, city });

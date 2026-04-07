@@ -268,7 +268,8 @@ function downloadPDFReport({ applianceList, billResult }) {
 
 export default function Card1_ApplianceTracker() {
   const { dark } = useTheme();
-  const { user } = useAuth();
+  const { user, activeMeterId } = useAuth();
+  const meterStorageKey = activeMeterId ? `_${activeMeterId}` : '';
 
   const [appliance,  setAppliance]  = useState('');
   const [watts,      setWatts]      = useState('');
@@ -298,23 +299,35 @@ export default function Card1_ApplianceTracker() {
 
   // ── Persisted appliance list & bill ───────────────────────
   const [appList,    setAppList]    = useState(() => {
-    try { return JSON.parse(localStorage.getItem('voltify_appliances') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem(`voltify_appliances${meterStorageKey}`) || '[]'); } catch { return []; }
   });
   const [billResult, setBillResult] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('voltify_bill_result') || 'null'); } catch { return null; }
+    try { return JSON.parse(localStorage.getItem(`voltify_bill_result${meterStorageKey}`) || 'null'); } catch { return null; }
   });
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState('');
   const [advice,     setAdvice]     = useState([]);
   const [showAdvice, setShowAdvice] = useState(false);
 
+  // Re-hydrate state when meterId changes
+  useEffect(() => {
+    try { 
+      setAppList(JSON.parse(localStorage.getItem(`voltify_appliances${meterStorageKey}`) || '[]'));
+      setBillResult(JSON.parse(localStorage.getItem(`voltify_bill_result${meterStorageKey}`) || 'null'));
+    } catch {
+      setAppList([]);
+      setBillResult(null);
+    }
+    setShowAdvice(false);
+  }, [activeMeterId, meterStorageKey]);
+
   // Sync to localStorage whenever appList or billResult change
   useEffect(() => {
-    localStorage.setItem('voltify_appliances',  JSON.stringify(appList));
-  }, [appList]);
+    localStorage.setItem(`voltify_appliances${meterStorageKey}`,  JSON.stringify(appList));
+  }, [appList, meterStorageKey]);
   useEffect(() => {
-    localStorage.setItem('voltify_bill_result', JSON.stringify(billResult));
-  }, [billResult]);
+    localStorage.setItem(`voltify_bill_result${meterStorageKey}`, JSON.stringify(billResult));
+  }, [billResult, meterStorageKey]);
 
   // ── Auto-fill wattage from DB ──────────────────────────────
   const handleApplianceChange = (val) => {

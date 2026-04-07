@@ -108,17 +108,19 @@ exports.addAppliance = async (req, res) => {
       basicUsageHours,
       advancedUsageSlots,
       daysUsedPerMonth,
+      meterId,
     } = req.body;
 
-    if (!applianceName || !powerRating) {
+    if (!applianceName || !powerRating || !meterId) {
       return res.status(400).json({
         success: false,
-        message: 'Appliance name and power rating are required.',
+        message: 'Appliance name, power rating, and meter ID are required.',
       });
     }
 
     const appliance = await Appliance.create({
       userId:             req.user.id,
+      meterId,
       applianceName,
       powerRating,
       quantity:           quantity           || 1,
@@ -148,6 +150,7 @@ exports.addAppliance = async (req, res) => {
 exports.getUserAppliances = async (req, res) => {
   try {
     const targetUserId = req.params.id;
+    const { meterId } = req.query;
 
     // Authorisation: users can only view their own appliances
     if (req.user.id !== targetUserId) {
@@ -157,7 +160,11 @@ exports.getUserAppliances = async (req, res) => {
       });
     }
 
-    const appliances = await Appliance.find({ userId: targetUserId }).sort({
+    if (!meterId) {
+      return res.status(400).json({ success: false, message: 'meterId query parameter is required.' });
+    }
+
+    const appliances = await Appliance.find({ userId: targetUserId, meterId }).sort({
       createdAt: -1,
     });
 
@@ -217,7 +224,10 @@ exports.deleteAppliance = async (req, res) => {
 // ============================================================
 exports.calculateBill = async (req, res) => {
   try {
-    const appliances = await Appliance.find({ userId: req.user.id });
+    const { meterId } = req.body;
+    if (!meterId) return res.status(400).json({ success: false, message: 'meterId is required.' });
+
+    const appliances = await Appliance.find({ userId: req.user.id, meterId });
 
     if (!appliances.length) {
       return res.status(400).json({
@@ -258,12 +268,12 @@ exports.calculateBill = async (req, res) => {
 // ============================================================
 exports.optimizeBudget = async (req, res) => {
   try {
-    const { targetBudget } = req.body;
+    const { targetBudget, meterId } = req.body;
 
-    if (!targetBudget || targetBudget <= 0) {
+    if (!targetBudget || targetBudget <= 0 || !meterId) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide a valid target budget in ₹.',
+        message: 'Please provide a valid target budget and meterId.',
       });
     }
 
@@ -286,7 +296,7 @@ exports.optimizeBudget = async (req, res) => {
     }
 
     // ── Fetch appliances & current bill ─────────────────────
-    const appliances = await Appliance.find({ userId: req.user.id });
+    const appliances = await Appliance.find({ userId: req.user.id, meterId });
 
     if (!appliances.length) {
       return res.status(400).json({

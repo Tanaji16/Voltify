@@ -131,19 +131,24 @@ function generateRecommendations(target, currentBill) {
 
 export default function Card2_BudgetPlanner() {
   const { dark } = useTheme();
-  const { user } = useAuth();
+  const { user, activeMeterId } = useAuth();
   const isPro    = user?.subscriptionStatus && user.subscriptionStatus !== 'Free';
+  const meterKey = activeMeterId ? `_${activeMeterId}` : '';
 
   const [target, setTarget] = useState(() => {
-    try { return Number(localStorage.getItem('voltify_budget_target') || 1000); } catch { return 1000; }
+    try { return Number(localStorage.getItem(`voltify_budget_target${meterKey}`) || 1000); } catch { return 1000; }
   });
   const [applied,     setApplied]     = useState(false);
   const [showPaywall, setShowPaywall] = useState(!isPro);
   const [expanded,    setExpanded]    = useState({});
 
   useEffect(() => {
-    localStorage.setItem('voltify_budget_target', target);
-  }, [target]);
+    try { setTarget(Number(localStorage.getItem(`voltify_budget_target${meterKey}`) || 1000)); } catch { setTarget(1000); }
+  }, [activeMeterId, meterKey]);
+
+  useEffect(() => {
+    localStorage.setItem(`voltify_budget_target${meterKey}`, target);
+  }, [target, meterKey]);
 
   const currentBill   = 1142;  // realistic MSEDCL bill for typical home
   const gaugePercent  = Math.min((target / currentBill) * 100, 100);

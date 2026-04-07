@@ -18,14 +18,11 @@ const signToken = (userId) =>
 const generateOTP = () =>
   crypto.randomInt(100000, 999999).toString();
 
-// ── Helper: Format user object for response ──────────────────
 const sanitizeUser = (user) => ({
   _id:                user._id,
   fullName:           user.fullName,
   email:              user.email,
-  city:               user.city,
-  consumerId:         user.consumerId,
-  buCode:             user.buCode,
+  meters:             user.meters,
   isVerified:         user.isVerified,
   subscriptionStatus: user.subscriptionStatus,
   freemiumAdviceUses: user.freemiumAdviceUses,
@@ -51,7 +48,10 @@ exports.register = async (req, res) => {
 
     // ── Check for duplicates ────────────────────────────────
     const existingUser = await User.findOne({
-      $or: [{ email }, { consumerId }],
+      $or: [
+        { email },
+        { 'meters.consumerId': consumerId }
+      ],
     });
 
     if (existingUser) {
@@ -67,9 +67,12 @@ exports.register = async (req, res) => {
     const user = await User.create({
       fullName,
       email,
-      consumerId,
-      buCode,
       password,
+      meters: [{
+        meterName: 'Primary Home',
+        consumerId,
+        buCode,
+      }],
     });
 
     const token = signToken(user._id);
@@ -329,8 +332,8 @@ exports.setPassword = async (req, res) => {
 
     // Assign the new password; the Mongoose pre-save hook handles hashing
     user.password = password;
-    if (city) {
-      user.city = city;
+    if (city && user.meters && user.meters.length > 0) {
+      user.meters[0].city = city;
     }
     await user.save();
 
@@ -338,5 +341,45 @@ exports.setPassword = async (req, res) => {
   } catch (error) {
     console.error('SetPassword Error:', error);
     res.status(500).json({ success: false, message: 'Failed to update password.' });
+  }
+};
+
+// ============================================================
+//  @desc    Add an additional Meter to User's Profile
+//  @route   POST /api/auth/add-meter
+//  @access  Private (requires JWT)
+// ============================================================
+exports.addMeter = async (req, res) => {
+  try {
+    const { meterName, consumerId, buCode, city } = req.body;
+    
+    if (!meterName || !consumerId || !buCode) {
+      return res.status(400).json({ success: false, message: 'Meter Name, Consumer ID, and BU Code are required.' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    // Check if consumerId already linked anywhere in DB
+    const existingMeter = await User.findOne({ 'meters.consumerId': consumerId });
+    if (existingMeter) {
+       return res.status(409).json({ success: false, message: 'This Consumer ID is already registered to an account.' });
+    }
+
+    user.meters.push({
+      meterName,
+      consumerId,
+      buCode,
+      city: city || user.meters[0]?.city || ''
+    });
+
+    await user.save();
+
+    res.status(201).json({ success: true, message: `Meter "${meterName}" added successfully!`, user: sanitizeUser(user) });
+  } catch (error) {
+    console.error('AddMeter Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to add meter.' });
   }
 };

@@ -6,12 +6,12 @@ import { History, Zap, Crown, Calculator, Calendar, Filter, TrendingDown, ScanLi
 import UploadBillModal from '../components/UploadBillModal.jsx';
 
 // Build history from actual Data ─────────────────────────────────
-function buildHistory(user) {
+function buildHistory(currentMeter) {
   const entries = [];
 
   // 1. OCR Data
-  if (user?.monthlyRecords && user.monthlyRecords.length > 0) {
-    user.monthlyRecords.forEach(r => {
+  if (currentMeter?.monthlyRecords && currentMeter.monthlyRecords.length > 0) {
+    currentMeter.monthlyRecords.forEach(r => {
       entries.push({
         type: 'bill',
         icon: '🧾',
@@ -65,12 +65,14 @@ const FILTER_OPTIONS = ['All', 'Bill', 'Appliance', 'Payment', 'Tip'];
 
 export default function HistoryPage() {
   const { dark }    = useTheme();
-  const { user, setAuth } = useAuth();
+  const { user, setAuth, activeMeterId } = useAuth();
   const [settings,  setSettings]  = useState(false);
   const [showScan,  setShowScan]  = useState(false);
   const [filter,    setFilter]    = useState('All');
 
-  const history = useMemo(() => buildHistory(user), [user]);
+  const currentMeter = user?.meters?.find(m => m._id === activeMeterId) || user?.meters?.[0];
+
+  const history = useMemo(() => buildHistory(currentMeter), [currentMeter]);
   const filtered = filter === 'All' ? history : history.filter(h => h.tag === filter);
 
   const bg   = dark ? 'bg-slate-950' : 'bg-gray-50';
@@ -192,9 +194,12 @@ export default function HistoryPage() {
       <SettingsPage isOpen={settings} onClose={() => setSettings(false)}/>
       <UploadBillModal 
         isOpen={showScan} 
+        activeMeterId={activeMeterId}
         onClose={() => setShowScan(false)} 
         onSuccess={(updatedRecords) => {
-          setAuth({ token: localStorage.getItem('voltify_token'), user: { ...user, monthlyRecords: updatedRecords } });
+          // Update the specific meter's records in the global user object
+          const updatedMeters = user.meters.map(m => m._id === currentMeter._id ? { ...m, monthlyRecords: updatedRecords } : m);
+          setAuth({ token: localStorage.getItem('voltify_token'), user: { ...user, meters: updatedMeters } });
         }}
       />
     </div>
