@@ -1,6 +1,6 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { TrendingDown, Zap } from 'lucide-react';
-import { useTheme } from '../App.jsx';
+import { useTheme, useAuth } from '../App.jsx';
 
 // Dynamically generate last 6 months from current date
 function getLast6Months() {
@@ -16,19 +16,33 @@ function getLast6Months() {
 
 // Mock bill data: drops after month 4 (Smart Suggestions started)
 const BASE_BILLS = [2140, 2310, 2580, 2450, 1920, 1650];
-const monthLabels = getLast6Months();
-
-const DATA = monthLabels.map((m, i) => ({
-  month:       m.label,
-  bill:        BASE_BILLS[i],
-  smartStart:  i === 4,
-}));
-
-const SAVINGS_START_MONTH = DATA[4].month;
 
 export default function SavingsGraph() {
   const { dark }   = useTheme();
-  const totalSaved = BASE_BILLS[3] - BASE_BILLS[5];
+  const { user }   = useAuth();
+  
+  // Conditionally generate graph data
+  let DATA = [];
+  if (user?.monthlyRecords && user.monthlyRecords.length > 0) {
+    // Sort chronological: oldest to newest
+    const chronological = [...user.monthlyRecords].reverse();
+    DATA = chronological.map((rec, i) => ({
+      month: rec.month,
+      bill: rec.amount,
+      smartStart: i === 4 // Just for show: flag the 5th month
+    }));
+  } else {
+    // Fallback to dummy data
+    const monthLabels = getLast6Months();
+    DATA = monthLabels.map((m, i) => ({
+      month:       m.label,
+      bill:        BASE_BILLS[i],
+      smartStart:  i === 4,
+    }));
+  }
+
+  const SAVINGS_START_MONTH = DATA.length > 4 ? DATA[4].month : null;
+  const totalSaved = DATA.length > 5 ? DATA[3].bill - DATA[5].bill : 0;
   const surface    = dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200';
 
   const CustomTooltip = ({ active, payload, label }) => {

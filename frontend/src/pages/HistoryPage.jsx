@@ -2,108 +2,32 @@ import { useState, useMemo } from 'react';
 import { useTheme, useAuth } from '../App.jsx';
 import Header from '../components/Header.jsx';
 import SettingsPage from './SettingsPage.jsx';
-import { History, Zap, Crown, Calculator, Calendar, Filter, TrendingDown } from 'lucide-react';
+import { History, Zap, Crown, Calculator, Calendar, Filter, TrendingDown, ScanLine } from 'lucide-react';
+import UploadBillModal from '../components/UploadBillModal.jsx';
 
-// Generate demo history entries ─────────────────────────────────
-function generateDemoHistory(user) {
-  const now = new Date();
-  const entries = [
-    {
-      type: 'bill',
-      icon: '🧾',
-      title: 'Bill Calculated — March 2025',
-      subtitle: '185.4 kWh consumed',
-      amount: '₹1,142',
-      date: new Date(now.getFullYear(), now.getMonth(), 1),
-      tag: 'Bill', tagColor: 'blue',
-    },
-    {
-      type: 'appliance',
-      icon: '❄️',
-      title: 'Added: Air Conditioner (1.5T)',
-      subtitle: '1100W · Blue Star 5★ · 6h/day · 25 days',
-      amount: '~₹430/mo',
-      date: new Date(now.getFullYear(), now.getMonth(), 3),
-      tag: 'Appliance', tagColor: 'green',
-    },
-    {
-      type: 'appliance',
-      icon: '🧊',
-      title: 'Added: Refrigerator (5★ Double Door)',
-      subtitle: '150W · LG · 24h/day · 30 days',
-      amount: '~₹192/mo',
-      date: new Date(now.getFullYear(), now.getMonth(), 3),
-      tag: 'Appliance', tagColor: 'green',
-    },
-    {
-      type: 'appliance',
-      icon: '📺',
-      title: 'Added: LED TV (43")',
-      subtitle: '80W · Samsung · 6h/day · 30 days',
-      amount: '~₹68/mo',
-      date: new Date(now.getFullYear(), now.getMonth(), 4),
-      tag: 'Appliance', tagColor: 'green',
-    },
-    {
-      type: 'appliance',
-      icon: '💨',
-      title: 'Added: Ceiling Fan ×2',
-      subtitle: '75W each · Havells · 14h/day · 30 days',
-      amount: '~₹90/mo',
-      date: new Date(now.getFullYear(), now.getMonth(), 4),
-      tag: 'Appliance', tagColor: 'green',
-    },
-    {
-      type: 'bill',
-      icon: '🧾',
-      title: 'Bill Calculated — February 2025',
-      subtitle: '162.0 kWh consumed',
-      amount: '₹876',
-      date: new Date(now.getFullYear(), now.getMonth() - 1, 1),
-      tag: 'Bill', tagColor: 'blue',
-    },
-    {
-      type: 'bill',
-      icon: '🧾',
-      title: 'Bill Calculated — January 2025',
-      subtitle: '201.5 kWh consumed',
-      amount: '₹1,287',
-      date: new Date(now.getFullYear(), now.getMonth() - 2, 1),
-      tag: 'Bill', tagColor: 'blue',
-    },
-    {
-      type: 'appliance',
-      icon: '🚿',
-      title: 'Added: Water Heater (Geyser)',
-      subtitle: '2000W · Racold · 1h/day · 25 days',
-      amount: '~₹180/mo',
-      date: new Date(now.getFullYear(), now.getMonth() - 1, 10),
-      tag: 'Appliance', tagColor: 'green',
-    },
-    {
-      type: 'tip',
-      icon: '💡',
-      title: 'Energy Tip Applied — AC Timer Set',
-      subtitle: 'Set AC auto-off timer to reduce 2h/day usage',
-      amount: 'Save ~₹80/mo',
-      date: new Date(now.getFullYear(), now.getMonth() - 1, 15),
-      tag: 'Tip', tagColor: 'amber',
-    },
-    {
-      type: 'tip',
-      icon: '🌡️',
-      title: 'Optimization — Geyser Thermostat',
-      subtitle: 'Reduced thermostat from 65°C to 50°C',
-      amount: 'Save ~₹35/mo',
-      date: new Date(now.getFullYear(), now.getMonth() - 2, 20),
-      tag: 'Tip', tagColor: 'amber',
-    },
-  ];
+// Build history from actual Data ─────────────────────────────────
+function buildHistory(user) {
+  const entries = [];
 
-  // Add real transactions from localStorage
+  // 1. OCR Data
+  if (user?.monthlyRecords && user.monthlyRecords.length > 0) {
+    user.monthlyRecords.forEach(r => {
+      entries.push({
+        type: 'bill',
+        icon: '🧾',
+        title: `Bill Parsed — ${r.month} ${r.year}`,
+        subtitle: `${r.units} kWh consumed`,
+        amount: `₹${r.amount?.toLocaleString('en-IN')}`,
+        date: new Date(`${r.month} 1, ${r.year}`),
+        tag: 'Bill', tagColor: 'blue',
+      });
+    });
+  }
+
+  // 2. Real transactions
   const txns = JSON.parse(localStorage.getItem('voltify_transactions') || '[]');
   for (const t of txns) {
-    entries.unshift({
+    entries.push({
       type: 'payment',
       icon: '💳',
       title: `Purchased ${t.plan} Plan`,
@@ -111,6 +35,19 @@ function generateDemoHistory(user) {
       amount: `₹${t.amount?.toLocaleString('en-IN')}`,
       date: new Date(t.date),
       tag: 'Payment', tagColor: 'purple',
+    });
+  }
+
+  // Empty state fallback
+  if (entries.length === 0) {
+    entries.push({
+      type: 'tip',
+      icon: '⚡',
+      title: 'Ready for scanning',
+      subtitle: 'Click "Scan Recent Bill" to extract your Mahavitaran charts.',
+      amount: '',
+      date: new Date(),
+      tag: 'Tip', tagColor: 'green'
     });
   }
 
@@ -128,11 +65,12 @@ const FILTER_OPTIONS = ['All', 'Bill', 'Appliance', 'Payment', 'Tip'];
 
 export default function HistoryPage() {
   const { dark }    = useTheme();
-  const { user }    = useAuth();
+  const { user, setAuth } = useAuth();
   const [settings,  setSettings]  = useState(false);
+  const [showScan,  setShowScan]  = useState(false);
   const [filter,    setFilter]    = useState('All');
 
-  const history = useMemo(() => generateDemoHistory(user), [user]);
+  const history = useMemo(() => buildHistory(user), [user]);
   const filtered = filter === 'All' ? history : history.filter(h => h.tag === filter);
 
   const bg   = dark ? 'bg-slate-950' : 'bg-gray-50';
@@ -148,10 +86,18 @@ export default function HistoryPage() {
       <Header onSettingsOpen={() => setSettings(true)}/>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Page title */}
-        <div>
-          <h1 className={`text-2xl font-black ${dark ? 'text-white' : 'text-gray-900'}`}>📋 History</h1>
-          <p className={`text-sm mt-1 ${dark ? 'text-slate-400' : 'text-gray-500'}`}>Your complete Voltify activity timeline</p>
+        {/* Page title & Scan Action */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className={`text-2xl font-black ${dark ? 'text-white' : 'text-gray-900'}`}>📋 History</h1>
+            <p className={`text-sm mt-1 ${dark ? 'text-slate-400' : 'text-gray-500'}`}>Your complete Voltify activity timeline</p>
+          </div>
+          <button 
+            onClick={() => setShowScan(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-95">
+            <ScanLine size={18} />
+            Scan Recent Bill
+          </button>
         </div>
 
         {/* ── Quick Stats ──────────────────────────────────────── */}
@@ -244,6 +190,13 @@ export default function HistoryPage() {
       </main>
 
       <SettingsPage isOpen={settings} onClose={() => setSettings(false)}/>
+      <UploadBillModal 
+        isOpen={showScan} 
+        onClose={() => setShowScan(false)} 
+        onSuccess={(updatedRecords) => {
+          setAuth({ token: localStorage.getItem('voltify_token'), user: { ...user, monthlyRecords: updatedRecords } });
+        }}
+      />
     </div>
   );
 }

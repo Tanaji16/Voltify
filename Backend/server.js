@@ -14,6 +14,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const applianceRoutes = require('./routes/applianceRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const billRoutes = require('./routes/billRoutes');
 
 // ── Initialise App ────────────────────────────────────────────
 const app = express();
@@ -39,6 +40,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/appliances', applianceRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/bills', billRoutes);
 
 // ── 404 Handler ───────────────────────────────────────────────
 app.use((_req, res) => {

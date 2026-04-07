@@ -70,6 +70,17 @@ const UserSchema = new mongoose.Schema(
       default: null,
     },
 
+    // ── Historical Usage Records (from OCR uploads) ─────────
+    monthlyRecords: [
+      {
+        month:  { type: String }, // e.g., 'JAN', 'FEB'
+        year:   { type: Number }, // e.g., 2024
+        units:  { type: Number },
+        amount: { type: Number },
+        dateStr:{ type: String }, // Raw extraction e.g. "JAN-24"
+      }
+    ],
+
     // ── Freemium Usage Tracking ─────────────────────────────
     freemiumAdviceUses: {
       type:    Number,
