@@ -290,7 +290,7 @@ export default function Card5_AIAdvisor() {
                 <Sparkles size={14} className="text-white"/>
               </div>
               <div className={`max-w-[85%] px-4 py-3 rounded-2xl rounded-tl-sm text-sm ${dark ? 'bg-slate-700 text-slate-200' : 'bg-white text-gray-800 shadow-sm border border-gray-100'}`}>
-                👋 Hi {user?.name?.split(' ')[0] || 'there'}! I'm your personal Energy Expert powered by MSEDCL data. Ask me anything about your electricity usage or select a topic below!
+                👋 Hi {user?.fullName?.split(' ')[0] || user?.name?.split(' ')[0] || 'there'}! I'm your personal Energy Expert powered by MSEDCL data. Ask me anything about your electricity usage or select a topic below!
               </div>
             </div>
           </div>

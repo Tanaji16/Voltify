@@ -12,6 +12,7 @@ const {
   verifyOTP,
   login,
   getMe,
+  setPassword,
 } = require('../controllers/authController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -32,5 +33,8 @@ router.post('/login', login);
 // ── Protected Routes ─────────────────────────────────────────
 // GET  /api/auth/me         → Get current user profile
 router.get('/me', protect, getMe);
+
+// POST /api/auth/set-password → Set password during signup step 2
+router.post('/set-password', protect, setPassword);
 
 module.exports = router;

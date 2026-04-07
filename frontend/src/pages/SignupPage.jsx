@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Zap, Check, X, Eye, EyeOff, ChevronRight, Phone, Shield, AlertCircle, Wifi, Mail } from 'lucide-react';
 import { useAuth } from '../App.jsx';
-import { sendOTP as apiSendOTP, verifyOTP as apiVerifyOTP, register as apiRegister } from '../api/auth.js';
+import { sendOTP as apiSendOTP, verifyOTP as apiVerifyOTP, register as apiRegister, setPassword as apiSetPassword } from '../api/auth.js';
 
 // ── Helpers ──────────────────────────────────────────────────
 const RULES = [
@@ -163,6 +163,8 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState('');
+  const [city, setCity] = useState('');
+  const [tempAuth, setTempAuth] = useState(null);
 
   // ════════════════════════════════════════════════════════════
   //  STEP 0 — Locate Connection → Register + Send OTP
@@ -205,8 +207,8 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const { data } = await apiVerifyOTP(email, otp.replace(/\s/g, ''));
-      // Save JWT immediately so Step 2 can make authenticated requests
-      setAuth({ user: data.user, token: data.token });
+      // Wait until Step 2 completes before modifying global auth (prevents redirect)
+      setTempAuth({ user: data.user, token: data.token });
       setStep(2);
     } catch (err) {
       setError(extractError(err));
@@ -226,10 +228,14 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      // Re-register with the real password (replaces temp)
-      // In a real app you'd have a dedicated /api/auth/set-password endpoint.
-      // For now, re-calling register returns a conflict for phone — so we just
-      // navigate to dashboard (user is already verified & auth token is set).
+      // Update with the real password using the temporary token to complete registration
+      const response = await apiSetPassword(password, city, tempAuth.token);
+      // Since the backend returns the fully updated user object (with the city), let's use it
+      if (response.data.user) {
+        setAuth({ ...tempAuth, user: response.data.user });
+      } else {
+        setAuth(tempAuth);
+      }
       navigate('/');
     } catch (err) {
       setError(extractError(err));
@@ -366,8 +372,7 @@ export default function SignupPage() {
               </div>
 
               {[
-                { label: 'Full Name', val: 'Tanaji Patil', id: 'prefill-name' },
-                { label: 'Address', val: 'Kalyan, MH', id: 'prefill-address' },
+                { label: 'Full Name', val: fullName, id: 'prefill-name' },
                 { label: 'Email', val: email, id: 'prefill-email' },
                 { label: 'Consumer ID', val: consumerId, id: 'prefill-cid' },
               ].map(f => (
@@ -376,6 +381,15 @@ export default function SignupPage() {
                   <input id={f.id} defaultValue={f.val} readOnly className={`${inputCls} opacity-70 cursor-not-allowed`} />
                 </div>
               ))}
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">City / Location</label>
+                <input id="input-city" type="text"
+                  placeholder="e.g. Kalyan"
+                  value={city} onChange={e => setCity(e.target.value)}
+                  className={inputCls} />
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">We use this to show you community energy averages.</p>
+              </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide mb-1">Create Password</label>

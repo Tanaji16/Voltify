@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Zap, Eye, EyeOff, Check, CheckCircle, X, AlertCircle, Wifi, Mail } from 'lucide-react';
 import { useAuth } from '../App.jsx';
-import { login as apiLogin, sendOTP as apiSendOTP, verifyOTP as apiVerifyOTP } from '../api/auth.js';
+import { login as apiLogin, sendOTP as apiSendOTP, verifyOTP as apiVerifyOTP, setPassword as apiSetPassword } from '../api/auth.js';
 
 // ── Password Strength Helpers ────────────────────────────────
 const RULES = [
@@ -130,6 +130,7 @@ export default function LoginPage() {
   const [fpShowPw, setFpShowPw] = useState(false);
   const [fpError, setFpError] = useState('');
   const [fpLoading, setFpLoading] = useState(false);
+  const [fpTempAuth, setFpTempAuth] = useState(null);
 
   // ════════════════════════════════════════════════════════════
   //  LOGIN
@@ -178,7 +179,8 @@ export default function LoginPage() {
     if (fpOtp.replace(/\s/g, '').length < 6) return setFpError('Please enter the complete 6-digit OTP.');
     setFpLoading(true);
     try {
-      await apiVerifyOTP(fpEmail, fpOtp.replace(/\s/g, ''));
+      const { data } = await apiVerifyOTP(fpEmail, fpOtp.replace(/\s/g, ''));
+      setFpTempAuth({ user: data.user, token: data.token });
       setFpModal('new-password');
     } catch (err) {
       setFpError(extractError(err));
@@ -190,11 +192,19 @@ export default function LoginPage() {
   // ════════════════════════════════════════════════════════════
   //  FORGOT PASSWORD — Step C: Save new password (mocked)
   // ════════════════════════════════════════════════════════════
-  const handleFpSavePw = () => {
+  const handleFpSavePw = async () => {
     const passed = RULES.filter(r => r.test(fpPw)).length;
     if (passed < 3) return setFpError('Please create a stronger password.');
-    // TODO: wire to a real /api/auth/reset-password endpoint when ready
-    setFpModal('done');
+    
+    setFpLoading(true);
+    try {
+      await apiSetPassword(fpPw, undefined, fpTempAuth.token);
+      setFpModal('done');
+    } catch (err) {
+      setFpError(extractError(err));
+    } finally {
+      setFpLoading(false);
+    }
   };
 
   // ════════════════════════════════════════════════════════════

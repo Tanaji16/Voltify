@@ -45,3 +45,13 @@ export const login = (email, password) =>
  */
 export const getMe = () =>
   api.get('/api/auth/me');
+
+/**
+ * Set a new password and optional city for the current logged-in user
+ * POST /api/auth/set-password
+ * @param {string} password 
+ * @param {string} city
+ * @param {string} [overrideToken] - Optional token if not yet stored in localStorage
+ */
+export const setPassword = (password, city, overrideToken) =>
+  api.post('/api/auth/set-password', { password, city }, overrideToken ? { headers: { Authorization: `Bearer ${overrideToken}` } } : undefined);

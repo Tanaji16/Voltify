@@ -1,6 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Trophy, Star, Crown, Lock } from 'lucide-react';
-import { useTheme } from '../App.jsx';
+import { useTheme, useAuth } from '../App.jsx';
 
 const COMMUNITY_DATA = [
   { name: 'You',            kWh: 264, fill: '#16A34A' },
@@ -28,7 +28,9 @@ const ACHIEVEMENTS = [
 
 export default function Card4_EcoScore() {
   const { dark } = useTheme();
+  const { user } = useAuth();
   const surface  = dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200';
+  const cityName = user?.city || 'Kalyan';
 
   return (
     <section className={`card ${surface} border p-6 animate-fade-in-up`} id="card-eco-score">
@@ -38,7 +40,7 @@ export default function Card4_EcoScore() {
           <Trophy size={20} className="text-yellow-500" />
         </div>
         <div>
-          <h2 className={`text-lg font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>Kalyan Community Eco-Score 🏆</h2>
+          <h2 className={`text-lg font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>{cityName} Community Eco-Score 🏆</h2>
           <p className={`text-xs ${dark ? 'text-slate-400' : 'text-gray-500'}`}>How you compare to similar homes in your area</p>
         </div>
       </div>
@@ -110,7 +112,7 @@ export default function Card4_EcoScore() {
       <div className={`mt-4 flex items-center gap-3 rounded-xl p-3 ${dark ? 'bg-slate-700/40 border border-slate-600' : 'bg-purple-50 border border-purple-200'}`}>
         <Crown size={18} className="text-purple-500 flex-shrink-0" />
         <p className={`text-xs ${dark ? 'text-slate-400' : 'text-gray-600'}`}>
-          <strong className={dark ? 'text-purple-300' : 'text-purple-700'}>Pro feature:</strong> See top 5% savers in Kalyan and get personalised benchmarks.
+          <strong className={dark ? 'text-purple-300' : 'text-purple-700'}>Pro feature:</strong> See top 5% savers in {cityName} and get personalised benchmarks.
         </p>
         <button id="btn-eco-upgrade" className="ml-auto px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex-shrink-0">
           Unlock

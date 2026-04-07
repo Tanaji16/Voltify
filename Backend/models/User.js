@@ -24,6 +24,11 @@ const UserSchema = new mongoose.Schema(
       match:     [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email address'],
     },
 
+    city: {
+      type:     String,
+      trim:     true,
+    },
+
     // ── MSEDCL / Mahavitaran Details ────────────────────────
     consumerId: {
       type:     String,

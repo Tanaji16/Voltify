@@ -43,7 +43,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2 mb-1">
               <Sun size={20} className="text-yellow-500" />
               <h1 className={`text-2xl font-black ${dark ? 'text-white' : 'text-gray-900'}`}>
-                {getGreeting()}, {user?.name || 'User'} 👋
+                {getGreeting()}, {user?.fullName || user?.name || 'User'} 👋
               </h1>
             </div>
             <p className={`text-sm ${dark ? 'text-slate-400' : 'text-gray-500'}`}>

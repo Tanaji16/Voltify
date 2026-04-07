@@ -23,6 +23,7 @@ const sanitizeUser = (user) => ({
   _id:                user._id,
   fullName:           user.fullName,
   email:              user.email,
+  city:               user.city,
   consumerId:         user.consumerId,
   buCode:             user.buCode,
   isVerified:         user.isVerified,
@@ -305,5 +306,37 @@ exports.getMe = async (req, res) => {
   } catch (error) {
     console.error('GetMe Error:', error);
     res.status(500).json({ success: false, message: 'Could not fetch user profile.' });
+  }
+};
+
+// ============================================================
+//  @desc    Set/Update password for a logged-in user
+//  @route   POST /api/auth/set-password
+//  @access  Private (requires JWT)
+// ============================================================
+exports.setPassword = async (req, res) => {
+  try {
+    const { password, city } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({ success: false, message: 'Password is required.' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    // Assign the new password; the Mongoose pre-save hook handles hashing
+    user.password = password;
+    if (city) {
+      user.city = city;
+    }
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Password configured successfully!', user: sanitizeUser(user) });
+  } catch (error) {
+    console.error('SetPassword Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update password.' });
   }
 };
