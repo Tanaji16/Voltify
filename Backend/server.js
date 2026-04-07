@@ -16,6 +16,7 @@ const applianceRoutes = require('./routes/applianceRoutes');
 const paymentRoutes   = require('./routes/paymentRoutes');
 const billRoutes      = require('./routes/billRoutes');
 const challengeRoutes = require('./routes/challengeRoutes');
+const javaRoute       = require('./routes/javaRoute');        // ⚡ Java integration
 
 
 // ── Initialise App ────────────────────────────────────────────
@@ -44,6 +45,7 @@ app.use('/api/appliances', applianceRoutes);
 app.use('/api/payment',    paymentRoutes);
 app.use('/api/bills',      billRoutes);
 app.use('/api/challenges', challengeRoutes);
+app.use('/api/java',       javaRoute);                        // ⚡ Java EnergyCalculator
 
 
 // ── 404 Handler ───────────────────────────────────────────────
