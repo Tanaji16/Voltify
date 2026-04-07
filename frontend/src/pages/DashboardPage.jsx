@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { Sun, Info, Lightbulb } from 'lucide-react';
-import Header             from '../components/Header.jsx';
-import DisclaimerModal    from '../components/DisclaimerModal.jsx';
-import SettingsPage       from './SettingsPage.jsx';
+import Header from '../components/Header.jsx';
+import DisclaimerModal from '../components/DisclaimerModal.jsx';
+import SettingsPage from './SettingsPage.jsx';
 import Card1_ApplianceTracker from '../components/Card1_ApplianceTracker.jsx';
-import Card2_BudgetPlanner    from '../components/Card2_BudgetPlanner.jsx';
-import Card3_SlabGuard        from '../components/Card3_SlabGuard.jsx';
-import Card4_EcoScore         from '../components/Card4_EcoScore.jsx';
-import Card5_AIAdvisor        from '../components/Card5_AIAdvisor.jsx';
-import Card6_PricingCheckout  from '../components/Card6_PricingCheckout.jsx';
-import SavingsGraph           from '../components/SavingsGraph.jsx';
-import { useTheme, useAuth }  from '../App.jsx';
+import Card2_BudgetPlanner from '../components/Card2_BudgetPlanner.jsx';
+import Card3_SlabGuard from '../components/Card3_SlabGuard.jsx';
+import Card4_EcoScore from '../components/Card4_EcoScore.jsx';
+import Card5_AIAdvisor from '../components/Card5_AIAdvisor.jsx';
+import Card6_PricingCheckout from '../components/Card6_PricingCheckout.jsx';
+import SavingsGraph from '../components/SavingsGraph.jsx';
+import { useTheme, useAuth } from '../App.jsx';
 
 const TIP = 'Tip of the day: Cleaning your ceiling fan blades can improve airflow and reduce energy consumption by up to 15%.';
 
@@ -23,10 +23,10 @@ function getGreeting() {
 }
 
 export default function DashboardPage() {
-  const { dark }              = useTheme();
-  const { user }              = useAuth();
+  const { dark } = useTheme();
+  const { user } = useAuth();
   const [disclaimer, setDisclaimer] = useState(false);
-  const [settings,   setSettings]   = useState(false);
+  const [settings, setSettings] = useState(false);
   const [tipDismiss, setTipDismiss] = useState(false);
 
   return (
@@ -43,7 +43,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2 mb-1">
               <Sun size={20} className="text-yellow-500" />
               <h1 className={`text-2xl font-black ${dark ? 'text-white' : 'text-gray-900'}`}>
-                {getGreeting()}, {user?.name || 'Tanaji'} 👋
+                {getGreeting()}, {user?.name || 'User'} 👋
               </h1>
             </div>
             <p className={`text-sm ${dark ? 'text-slate-400' : 'text-gray-500'}`}>
@@ -106,7 +106,7 @@ export default function DashboardPage() {
 
       {/* ── Modals / Drawers ────────────────────────── */}
       <DisclaimerModal isOpen={disclaimer} onClose={() => setDisclaimer(false)} />
-      <SettingsPage    isOpen={settings}   onClose={() => setSettings(false)}   />
+      <SettingsPage isOpen={settings} onClose={() => setSettings(false)} />
     </div>
   );
 }
