@@ -22,6 +22,8 @@ const sanitizeUser = (user) => ({
   _id:                user._id,
   fullName:           user.fullName,
   email:              user.email,
+  // Expose city at the top level for easy access (sourced from meters[0] or top-level field)
+  city:               user.city || user.meters?.[0]?.city || '',
   meters:             user.meters,
   isVerified:         user.isVerified,
   subscriptionStatus: user.subscriptionStatus,
@@ -332,8 +334,12 @@ exports.setPassword = async (req, res) => {
 
     // Assign the new password; the Mongoose pre-save hook handles hashing
     user.password = password;
-    if (city && user.meters && user.meters.length > 0) {
-      user.meters[0].city = city;
+    if (city) {
+      // Set city in BOTH places so it's accessible regardless of how the frontend reads it
+      user.city = city;
+      if (user.meters && user.meters.length > 0) {
+        user.meters[0].city = city;
+      }
     }
     await user.save();
 

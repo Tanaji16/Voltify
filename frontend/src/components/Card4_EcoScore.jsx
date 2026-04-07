@@ -30,7 +30,7 @@ export default function Card4_EcoScore() {
   const { dark } = useTheme();
   const { user } = useAuth();
   const surface  = dark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200';
-  const cityName = user?.city || 'Kalyan';
+  const cityName = user?.city || user?.meters?.[0]?.city || 'Your Area';
 
   return (
     <section className={`card ${surface} border p-6 animate-fade-in-up`} id="card-eco-score">

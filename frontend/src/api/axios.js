@@ -22,11 +22,16 @@ const api = axios.create({
 
 // ── Request Interceptor ──────────────────────────────────────
 // Attach Bearer token before every outgoing request
+// NOTE: If the caller already set an Authorization header (e.g. overrideToken
+// during signup step 2), we do NOT overwrite it with the localStorage token.
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('voltify_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Only attach from localStorage if no explicit Authorization was provided
+    if (!config.headers.Authorization) {
+      const token = localStorage.getItem('voltify_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
