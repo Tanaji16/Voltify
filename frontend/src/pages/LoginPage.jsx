@@ -6,10 +6,10 @@ import { login as apiLogin, sendOTP as apiSendOTP, verifyOTP as apiVerifyOTP } f
 
 // ── Password Strength Helpers ────────────────────────────────
 const RULES = [
-  { id: 'len',   label: 'At least 8 characters',   test: p => p.length >= 8           },
-  { id: 'upper', label: 'One uppercase letter',     test: p => /[A-Z]/.test(p)        },
-  { id: 'num',   label: 'One number',               test: p => /\d/.test(p)           },
-  { id: 'sym',   label: 'One special character',    test: p => /[^A-Za-z0-9]/.test(p) },
+  { id: 'len', label: 'At least 8 characters', test: p => p.length >= 8 },
+  { id: 'upper', label: 'One uppercase letter', test: p => /[A-Z]/.test(p) },
+  { id: 'num', label: 'One number', test: p => /\d/.test(p) },
+  { id: 'sym', label: 'One special character', test: p => /[^A-Za-z0-9]/.test(p) },
 ];
 
 function StrengthBar({ password }) {
@@ -18,8 +18,8 @@ function StrengthBar({ password }) {
   return (
     <div className="mt-3 space-y-2">
       <div className="flex gap-1">
-        {[0,1,2,3].map(i => (
-          <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i < passed ? colors[passed-1] : 'bg-gray-200 dark:bg-slate-700'}`} />
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i < passed ? colors[passed - 1] : 'bg-gray-200 dark:bg-slate-700'}`} />
         ))}
       </div>
       <ul className="space-y-1">
@@ -40,24 +40,24 @@ function StrengthBar({ password }) {
 function OtpBoxes({ value, onChange }) {
   const refs = Array.from({ length: 6 }, () => useRef(null));
   const handleKey = (i, e) => {
-    if (e.key === 'Backspace' && !e.target.value && i > 0) refs[i-1].current?.focus();
+    if (e.key === 'Backspace' && !e.target.value && i > 0) refs[i - 1].current?.focus();
   };
   const handleChange = (i, v) => {
-    const d   = v.replace(/\D/,'').slice(-1);
+    const d = v.replace(/\D/, '').slice(-1);
     const arr = value.split('');
-    arr[i]    = d;
+    arr[i] = d;
     onChange(arr.join(''));
-    if (d && i < 5) refs[i+1].current?.focus();
+    if (d && i < 5) refs[i + 1].current?.focus();
   };
   const handlePaste = e => {
-    const pasted = e.clipboardData.getData('text').replace(/\D/g,'').slice(0,6);
-    onChange(pasted.padEnd(6,' '));
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    onChange(pasted.padEnd(6, ' '));
     refs[Math.min(pasted.length, 5)].current?.focus();
     e.preventDefault();
   };
   return (
     <div className="flex gap-2 justify-center" onPaste={handlePaste}>
-      {Array.from({length:6}).map((_,i) => (
+      {Array.from({ length: 6 }).map((_, i) => (
         <input key={i} ref={refs[i]} id={`login-otp-box-${i}`}
           type="text" inputMode="numeric" maxLength={1}
           value={value[i] || ''}
@@ -110,41 +110,26 @@ function extractError(err) {
 // ── Input class ──────────────────────────────────────────────
 const inputCls = "w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all";
 
-// ── Demo name map — maps emails to realistic names ────
-// Used as a fallback when backend returns a generic name
-const DEMO_NAMES = {
-  'admin@example.com': 'Tanaji Patil',
-  'user@example.com': 'Ravi Kumar',
-};
-
-function resolveUserName(user, email) {
-  // If backend returned a real unique name (not defaults), use it
-  if (user?.name && user.name !== 'Tanaji Patil' && user.name.length > 2) return user.name;
-  if (user?.fullName && user.fullName !== 'Tanaji Patil') return user.fullName;
-  // Fallback: map email to demo name
-  return DEMO_NAMES[email] || user?.name || user?.fullName || 'User';
-}
-
 // ════════════════════════════════════════════════════════════
 export default function LoginPage() {
-  const navigate    = useNavigate();
+  const navigate = useNavigate();
   const { setAuth } = useAuth();
 
   // ── Login form ─────────────────────────────────────────────
-  const [email,    setEmail]    = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPw,   setShowPw]   = useState(false);
-  const [error,    setError]    = useState('');
-  const [loading,  setLoading]  = useState(false);
+  const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // ── Forgot-password modal state ───────────────────────────
-  const [fpModal,  setFpModal]  = useState(null);  // null | 'otp-send' | 'otp-verify' | 'new-password' | 'done'
-  const [fpEmail,  setFpEmail]  = useState('');
-  const [fpOtp,    setFpOtp]    = useState('');
-  const [fpPw,     setFpPw]     = useState('');
+  const [fpModal, setFpModal] = useState(null);  // null | 'otp-send' | 'otp-verify' | 'new-password' | 'done'
+  const [fpEmail, setFpEmail] = useState('');
+  const [fpOtp, setFpOtp] = useState('');
+  const [fpPw, setFpPw] = useState('');
   const [fpShowPw, setFpShowPw] = useState(false);
-  const [fpError,  setFpError]  = useState('');
-  const [fpLoading,setFpLoading]= useState(false);
+  const [fpError, setFpError] = useState('');
+  const [fpLoading, setFpLoading] = useState(false);
 
   // ════════════════════════════════════════════════════════════
   //  LOGIN
@@ -152,16 +137,14 @@ export default function LoginPage() {
   const handleLoginSubmit = async (e) => {
     e?.preventDefault();
     setError('');
-    if (!email)    return setError('Please enter your email address.');
+    if (!email) return setError('Please enter your email address.');
     if (!password) return setError('Please enter your password.');
     if (!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) return setError('Please enter a valid email address.');
 
     setLoading(true);
     try {
       const { data } = await apiLogin(email, password);
-      const resolvedName = resolveUserName(data.user, email);
-      const patchedUser  = { ...data.user, name: resolvedName, email };
-      setAuth({ user: patchedUser, token: data.token });
+      setAuth({ user: { ...data.user, name: data.user.fullName, email }, token: data.token });
       navigate('/');
     } catch (err) {
       setError(extractError(err));
@@ -192,10 +175,10 @@ export default function LoginPage() {
   // ════════════════════════════════════════════════════════════
   const handleFpVerifyOtp = async () => {
     setFpError('');
-    if (fpOtp.replace(/\s/g,'').length < 6) return setFpError('Please enter the complete 6-digit OTP.');
+    if (fpOtp.replace(/\s/g, '').length < 6) return setFpError('Please enter the complete 6-digit OTP.');
     setFpLoading(true);
     try {
-      await apiVerifyOTP(fpEmail, fpOtp.replace(/\s/g,''));
+      await apiVerifyOTP(fpEmail, fpOtp.replace(/\s/g, ''));
       setFpModal('new-password');
     } catch (err) {
       setFpError(extractError(err));
@@ -220,22 +203,22 @@ export default function LoginPage() {
 
       {/* ── Left: Branding ────────────────────────────── */}
       <div className="hidden lg:flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-12 text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{backgroundImage:'radial-gradient(circle at 25% 25%, #3B82F6 0%, transparent 50%), radial-gradient(circle at 75% 75%, #7C3AED 0%, transparent 50%)'}} />
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, #3B82F6 0%, transparent 50%), radial-gradient(circle at 75% 75%, #7C3AED 0%, transparent 50%)' }} />
         <div className="relative z-10 text-center">
           <div className="flex items-center justify-center gap-3 mb-8">
             <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center border border-white/20">
               <Zap size={28} className="fill-white text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-black mb-4">Welcome back to<br/><span className="text-blue-300">Voltify ⚡</span></h1>
+          <h1 className="text-4xl font-black mb-4">Welcome back to<br /><span className="text-blue-300">Voltify ⚡</span></h1>
           <p className="text-blue-200 text-base leading-relaxed max-w-sm mx-auto">
             Your smart electricity companion. Monitor, predict, and save on your Mahavitaran bill every month.
           </p>
           <div className="mt-10 grid grid-cols-3 gap-4 text-center">
             {[
               { num: '₹800', label: 'Avg. Savings/yr' },
-              { num: '15K+', label: 'Happy Users'     },
-              { num: '4.8★', label: 'App Rating'      },
+              { num: '15K+', label: 'Happy Users' },
+              { num: '4.8★', label: 'App Rating' },
             ].map((s, i) => (
               <div key={i} className="bg-white/10 rounded-xl p-3 border border-white/10">
                 <p className="text-xl font-black">{s.num}</p>
@@ -317,10 +300,10 @@ export default function LoginPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  {fpModal === 'otp-send'     && 'Reset Password'}
-                  {fpModal === 'otp-verify'   && 'Enter OTP'}
+                  {fpModal === 'otp-send' && 'Reset Password'}
+                  {fpModal === 'otp-verify' && 'Enter OTP'}
                   {fpModal === 'new-password' && 'Set New Password'}
-                  {fpModal === 'done'         && 'Password Updated!'}
+                  {fpModal === 'done' && 'Password Updated!'}
                 </h2>
                 <button id="btn-close-fp-modal" onClick={() => setFpModal(null)}
                   className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500">
